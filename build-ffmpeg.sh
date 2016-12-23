@@ -46,12 +46,13 @@ fi
 # avresample
 #CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-avresample"
 
-ARCHS="arm64 armv7 x86_64 i386 mac mac64"
+ARCHS="arm64 armv7s x86_64"
+# i386 armv7 mac
 
 COMPILE="y"
 LIPO="y"
 
-DEPLOYMENT_TARGET="6.0"
+DEPLOYMENT_TARGET="7.0"
 
 if [ "$*" ]
 then
@@ -67,6 +68,8 @@ then
 			LIPO=
 		fi
 	fi
+else
+	ARCHS="$ARCHS mac64"
 fi
 
 if [ "$COMPILE" ]
@@ -128,15 +131,16 @@ then
 		if [ "$ARCH" = "mac" -o "$ARCH" = "mac64" ]
 		then
 			CC="clang"
-			TARCH="i386"
 			if [ "$ARCH" = "mac64" ] 
 			then
-				TARCH="x86_64"
+				ARCH="x86_64"
+			else
+				ARCH="i386"
 			fi
+			THIN="$CWD/mac"
 		else
 			XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
 			CC="xcrun -sdk $XCRUN_SDK clang"
-			TARCH="$ARCH"
 		fi
 		CXXFLAGS="$CFLAGS"
 		LDFLAGS="$CFLAGS"
@@ -153,7 +157,7 @@ then
 
 		TMPDIR=${TMPDIR/%\/} $CWD/$SOURCE/configure \
 		    --target-os=darwin \
-		    --arch=$TARCH \
+		    --arch=$ARCH \
 		    --cc="$CC" \
 		    $CONFIGURE_FLAGS \
 		    --extra-cflags="$CFLAGS" \
@@ -163,6 +167,7 @@ then
 
 		make -j3 install $EXPORT || exit 1
 		cd $CWD
+		THIN=`pwd`/"thin"
 	done
 fi
 
