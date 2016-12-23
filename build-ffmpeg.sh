@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # directories
-SOURCE="ffmpeg-3.2"
+SOURCE="ffmpeg-2.8.3"
 FAT="FFmpeg-iOS"
 
 SCRATCH="scratch"
@@ -11,10 +11,27 @@ THIN=`pwd`/"thin"
 # absolute path to x264 library
 #X264=`pwd`/fat-x264
 
-#FDK_AAC=`pwd`/../fdk-aac-build-script-for-iOS/fdk-aac-ios
-
+#FDK_AAC=`pwd`/fdk-aac/fdk-aac-ios
+#                 --enable-version3 \
 CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs \
-                 --disable-doc --enable-pic"
+                 --disable-doc --enable-pic \
+				 --disable-programs \
+				 --disable-doc \
+				 --disable-network \
+				 --disable-everything \
+				 --disable-encoders \
+				 --disable-muxers \
+				 --enable-pthreads \
+				 --enable-static \
+				 --enable-demuxer=mpegvideo \
+				 --enable-demuxer=flv \
+				 --enable-decoder=h264 \
+				 --enable-decoder=mpeg4 \
+				 --enable-parser=h264 \
+				 --enable-parser=mpeg4video \
+				 --enable-parser=vp8 \
+				 --enable-parser=vp9 \
+				"
 
 if [ "$X264" ]
 then
