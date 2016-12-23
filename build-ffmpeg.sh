@@ -13,7 +13,7 @@ THIN=`pwd`/"thin"
 
 #FDK_AAC=`pwd`/fdk-aac/fdk-aac-ios
 #                 --enable-version3 \
-CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs \
+CONFIGURE_FLAGS="--disable-debug --disable-programs \
                  --disable-doc --enable-pic \
 				 --disable-programs \
 				 --disable-doc \
@@ -46,7 +46,7 @@ fi
 # avresample
 #CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-avresample"
 
-ARCHS="arm64 armv7 x86_64 i386"
+ARCHS="arm64 armv7 x86_64 i386 mac mac64"
 
 COMPILE="y"
 LIPO="y"
@@ -106,22 +106,38 @@ then
 		mkdir -p "$SCRATCH/$ARCH"
 		cd "$SCRATCH/$ARCH"
 
-		CFLAGS="-arch $ARCH"
-		if [ "$ARCH" = "i386" -o "$ARCH" = "x86_64" ]
+		if [ "$ARCH" = "mac" -o "$ARCH" = "mac64" ]
 		then
-		    PLATFORM="iPhoneSimulator"
-		    CFLAGS="$CFLAGS -mios-simulator-version-min=$DEPLOYMENT_TARGET"
+			CFLAGS=""
 		else
-		    PLATFORM="iPhoneOS"
-		    CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"
-		    if [ "$ARCH" = "arm64" ]
-		    then
-		        EXPORT="GASPP_FIX_XCODE5=1"
-		    fi
+			CONFIGURE_FLAGS="--enable-cross-compile $CONFIGURE_FLAGS"
+			CFLAGS="-arch $ARCH"
+			if [ "$ARCH" = "i386" -o "$ARCH" = "x86_64" ]
+			then
+			    PLATFORM="iPhoneSimulator"
+			    CFLAGS="$CFLAGS -mios-simulator-version-min=$DEPLOYMENT_TARGET"
+			else
+			    PLATFORM="iPhoneOS"
+			    CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"
+			    if [ "$ARCH" = "arm64" ]
+			    then
+			        EXPORT="GASPP_FIX_XCODE5=1"
+			    fi
+			fi
 		fi
-
-		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
-		CC="xcrun -sdk $XCRUN_SDK clang"
+		if [ "$ARCH" = "mac" -o "$ARCH" = "mac64" ]
+		then
+			CC="clang"
+			TARCH="i386"
+			if [ "$ARCH" = "mac64" ] 
+			then
+				TARCH="x86_64"
+			fi
+		else
+			XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
+			CC="xcrun -sdk $XCRUN_SDK clang"
+			TARCH="$ARCH"
+		fi
 		CXXFLAGS="$CFLAGS"
 		LDFLAGS="$CFLAGS"
 		if [ "$X264" ]
@@ -137,7 +153,7 @@ then
 
 		TMPDIR=${TMPDIR/%\/} $CWD/$SOURCE/configure \
 		    --target-os=darwin \
-		    --arch=$ARCH \
+		    --arch=$TARCH \
 		    --cc="$CC" \
 		    $CONFIGURE_FLAGS \
 		    --extra-cflags="$CFLAGS" \
